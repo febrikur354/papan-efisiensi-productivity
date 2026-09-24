@@ -13,8 +13,7 @@ async function jsonbin(method, body){
     headers:{
       'X-Access-Key':KEY,
       'Content-Type':'application/json',
-      'X-Bin-Versioning':'true'
-    },
+       },
     ...(body!==undefined?{body:JSON.stringify(body)}:{})
   });
   const j=await r.json().catch(()=>({}));
