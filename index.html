@@ -38,6 +38,14 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:12px 10p
   pointer-events:auto !important;
   user-select:text !important;
 }
+  /* LOGIN DINONAKTIFKAN SEMENTARA */
+#loginModal{
+  display:none !important;
+}
+
+#logout{
+  display:none !important;
+}
 </style>
 </head>
 <body>
@@ -102,19 +110,24 @@ async function api(url,opt={}){
 }
 async function load(){
   try{
-    const auth=await api('/api/auth');
+    const j = await api('/api/productivity');
 
-    if(!auth.authorized){
-      $('#loginModal').classList.remove('hidden');
-      $('#logout').classList.add('hidden');
+    data = j.lines || [];
 
-      const j=await api('/api/productivity');
-      data=j.lines||[];
-      render();
+    render();
 
-      return;
-    }
+    $('#loginModal').classList.add('hidden');
+    $('#logout').classList.add('hidden');
 
+  }catch(e){
+
+    show(
+      e.message || 'Gagal memuat data',
+      'error'
+    );
+
+  }
+}
     const j=await api('/api/productivity');
     data=j.lines||[];
     render();
