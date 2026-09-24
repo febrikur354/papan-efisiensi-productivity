@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Papan Efisiensi Productivity — Admin</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#687386;--line:#e5eaf1;--accent:#155eef;--good:#138a4b;--warn:#b77900;--bad:#c62828}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:#10233f;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:20px}header small{color:#b9c7dc}.wrap{max-width:1280px;margin:auto;padding:22px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 3px 14px #12233d0b}
+.kpi b{font-size:28px;display:block;margin-top:6px}.kpi span{color:var(--muted);font-size:13px}
+.form{margin-top:18px}.formgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.field label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}.field input{width:100%;padding:11px;border:1px solid #ccd5e2;border-radius:9px;font-size:14px}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}button{border:0;border-radius:9px;padding:10px 15px;cursor:pointer;font-weight:600}button.primary{background:var(--accent);color:#fff}button.secondary{background:#eaf0f8;color:#17304f}button.danger{background:#fdecec;color:#a51f1f}
+.tablecard{margin-top:18px;overflow:auto}.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.topbar input{max-width:300px;padding:10px;border:1px solid #ccd5e2;border-radius:9px}
+table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{background:#f8fafc;color:#556174}.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:700}.good{background:#e5f7ed;color:var(--good)}.warn{background:#fff3d7;color:var(--warn)}.bad{background:#fde7e7;color:var(--bad)}
+.bar{height:8px;background:#e8edf4;border-radius:99px;overflow:hidden;min-width:100px}.bar i{display:block;height:100%;background:var(--accent)}
+.notice{margin:12px 0;padding:11px 13px;border-radius:9px;background:#eef5ff;color:#174b9c;font-size:13px}.error{background:#fff0f0;color:#a51f1f}
+.modal{position:fixed;inset:0;background:#081321aa;display:flex;align-items:center;justify-content:center;z-index:20}.login{background:#fff;padding:26px;border-radius:16px;width:min(390px,92vw)}.login h2{margin-top:0}.login input{width:100%;padding:12px;margin:7px 0 12px;border:1px solid #ccd5e2;border-radius:9px}.hidden{display:none!important}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.grid,.formgrid{grid-template-columns:1fr}.wrap{padding:12px}header{padding:15px}}
+</style>
+</head>
+<body>
+<header><div><h1>🏭 Papan Efisiensi Productivity</h1><small>Panel Admin</small></div><div><a href="/public.html" target="_blank" style="color:#fff;margin-right:12px">Public Board ↗</a><button id="logout" class="secondary hidden">Logout</button></div></header>
+<div class="wrap">
+<div id="notice" class="notice hidden"></div>
+<section class="grid">
+<div class="card kpi"><span>Total Line</span><b id="kLines">0</b></div>
+<div class="card kpi"><span>Rata-rata Efisiensi</span><b id="kEff">0%</b></div>
+<div class="card kpi"><span>Line ≥ 95%</span><b id="kGood">0</b></div>
+<div class="card kpi"><span>Aktual Produksi</span><b id="kQty">0</b></div>
+</section>
+
+<section class="card form">
+<h2 style="margin-top:0">Input / Update Line</h2>
+<input type="hidden" id="editId">
+<div class="formgrid">
+<div class="field"><label>Nama Line</label><input id="line" placeholder="REAR 1"></div>
+<div class="field"><label>Waktu Produksi (menit)</label><input id="minutes" type="number" min="1" step="1" placeholder="480"></div>
+<div class="field"><label>CT Standard (detik/pcs)</label><input id="std" type="number" min="0.01" step="0.01" placeholder="45"></div>
+<div class="field"><label>CT Actual (detik/pcs)</label><input id="actualCt" type="number" min="0.01" step="0.01" placeholder="48"></div>
+<div class="field"><label>Aktual Produksi (pcs)</label><input id="qty" type="number" min="0" step="1" placeholder="560"></div>
+</div>
+<div class="actions"><button class="primary" id="save">Simpan Data</button><button class="secondary" id="reset">Reset</button></div>
+</section>
+
+<section class="card tablecard">
+<div class="topbar"><h2 style="margin:0">Data Productivity</h2><input id="search" placeholder="🔎 Cari nama line..."></div>
+<table><thead><tr><th>Line</th><th>Waktu</th><th>CT Std</th><th>CT Actual</th><th>Efisiensi</th><th>Target</th><th>Aktual</th><th>Achievement</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="rows"></tbody></table>
+</section>
+</div>
+
+<div id="loginModal" class="modal"><form class="login" id="loginForm"><h2>Login Admin</h2><p style="color:#687386;font-size:13px">Masukkan password admin Vercel.</p><input id="password" type="password" placeholder="Password" autocomplete="current-password"><button class="primary" style="width:100%">Login</button><p id="loginErr" style="color:#c62828;font-size:12px"></p></form></div>
+
+<script>
+let data=[]; const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function calc(x){const target=(Number(x.minutes)*60/Number(x.std))||0;const eff=(Number(x.std)/Number(x.actualCt))*100||0;const ach=target?Number(x.qty)/target*100:0;return {target,eff,ach}}
+function status(e){return e>=95?['GOOD','good']:e>=85?['WARNING','warn']:['LOW','bad']}
+function show(msg,error=false){$('notice').textContent=msg;$('notice').classList.remove('hidden');$('notice').classList.toggle('error',error);setTimeout(()=>$('notice').classList.add('hidden'),3500)}
+async function api(url,opt={}){const r=await fetch(url,{...opt,headers:{'Content-Type':'application/json',...(opt.headers||{})}});let j={};try{j=await r.json()}catch{}if(!r.ok)throw Error(j.error||'Terjadi kesalahan');return j}
+async function load(){try{const j=await api('/api/productivity');data=j.lines||[];render();$('loginModal').classList.add('hidden');$('logout').classList.remove('hidden')}catch(e){$('loginModal').classList.remove('hidden')}}
+function render(){
+ const q=$('search').value.toLowerCase();const rows=data.filter(x=>x.line.toLowerCase().includes(q));
+ let sum=0,good=0,qty=0;data.forEach(x=>{const c=calc(x);sum+=c.eff;good+=c.eff>=95;qty+=Number(x.qty)||0});
+ $('kLines').textContent=data.length;$('kEff').textContent=(data.length?sum/data.length:0).toFixed(1)+'%';$('kGood').textContent=good;$('kQty').textContent=qty.toLocaleString('id-ID');
+ $('rows').innerHTML=rows.map(x=>{const c=calc(x),s=status(c.eff);return `<tr><td><b>${esc(x.line)}</b></td><td>${esc(x.minutes)} min</td><td>${Number(x.std).toFixed(2)}</td><td>${Number(x.actualCt).toFixed(2)}</td><td><b>${c.eff.toFixed(1)}%</b><div class="bar"><i style="width:${Math.min(c.eff,100)}%"></i></div></td><td>${Math.round(c.target).toLocaleString('id-ID')}</td><td>${Number(x.qty).toLocaleString('id-ID')}</td><td>${c.ach.toFixed(1)}%</td><td><span class="badge ${s[1]}">${s[0]}</span></td><td><button class="secondary" onclick="editRow('${x.id}')">Edit</button> <button class="danger" onclick="delRow('${x.id}')">Hapus</button></td></tr>`}).join('')||'<tr><td colspan="10" style="text-align:center;color:#687386">Belum ada data line.</td></tr>';
+}
+window.editRow=id=>{const x=data.find(a=>a.id===id);if(!x)return;$('editId').value=x.id;$('line').value=x.line;$('minutes').value=x.minutes;$('std').value=x.std;$('actualCt').value=x.actualCt;$('qty').value=x.qty;window.scrollTo({top:0,behavior:'smooth'})}
+window.delRow=async id=>{if(!confirm('Hapus data line ini?'))return;data=data.filter(x=>x.id!==id);try{await api('/api/productivity',{method:'PUT',body:JSON.stringify({lines:data})});render();show('Data berhasil dihapus.')}catch(e){show(e.message,true);await load()}}
+$('save').onclick=async()=>{const line=$('line').value.trim(),minutes=Number($('minutes').value),std=Number($('std').value),actualCt=Number($('actualCt').value),qty=Number($('qty').value);if(!line||minutes<=0||std<=0||actualCt<=0||qty<0)return show('Lengkapi semua data dengan angka yang valid.',true);const id=$('editId').value||crypto.randomUUID();const row={id,line,minutes,std,actualCt,qty};const i=data.findIndex(x=>x.id===id);if(i>=0)data[i]=row;else data.push(row);try{await api('/api/productivity',{method:'PUT',body:JSON.stringify({lines:data})});reset();render();show('Data berhasil disimpan.')}catch(e){show(e.message,true)}}
+$('reset').onclick=()=>reset();function reset(){$('editId').value='';['line','minutes','std','actualCt','qty'].forEach(id=>$(id).value='')}
+$('search').oninput=render;
+$('logout').onclick=async()=>{await api('/api/auth',{method:'DELETE'});location.reload()}
+$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginErr').textContent='';try{await api('/api/auth',{method:'POST',body:JSON.stringify({password:$('password').value})});location.reload()}catch(err){$('loginErr').textContent=err.message}}
+load();
+</script>
+</body>
+</html>
