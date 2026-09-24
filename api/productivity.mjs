@@ -1,40 +1,209 @@
+import crypto from "node:crypto";
+
 const BIN = process.env.JSONBIN_BIN_ID;
 const KEY = process.env.JSONBIN_ACCESS_KEY;
+
 const BASE = `https://api.jsonbin.io/v3/b/${BIN}`;
+const COOKIE = "prod_session";
+
+function sign(value, secret) {
+  return crypto
+    .createHmac("sha256", secret)
+    .update(value)
+    .digest("base64url");
+}
 
 function parseCookies(req) {
-  const raw = req.headers.get("cookie") || "";
-  return Object.fromEntries(raw.split(";").map(x => x.trim().split("=")).filter(x => x.length === 2));
+  const raw = req.headers.cookie || "";
+
+  return Object.fromEntries(
+    raw
+      .split(";")
+      .map(x => x.trim().split("="))
+      .filter(x => x.length === 2)
+  );
 }
-async function isAdmin(req) {
-  const r = await fetch(new URL("/api/auth", req.url), {headers:{cookie:req.headers.get("cookie")||""}});
-  const j = await r.json().catch(()=>({}));
-  return j.authorized === true;
-}
-async function jsonbin(method, body) {
-  const r = await fetch(method === "GET" ? `${BASE}/latest` : BASE, {
-    method, headers: {"X-Access-Key": KEY, "Content-Type":"application/json", "X-Bin-Versioning":"true"},
-    ...(body ? {body: JSON.stringify(body)} : {})
-  });
-  const j = await r.json().catch(()=>({}));
-  if (!r.ok) throw new Error(j.message || j.error || `JSONBin error ${r.status}`);
-  return j.record ?? j;
-}
-export default async function handler(req) {
-  if (!BIN || !KEY) return Response.json({error:"Environment JSONBin belum lengkap."},{status:500});
+
+function isAdmin(req) {
+  const secret = process.env.SESSION_SECRET;
+  const cookies = parseCookies(req);
+  const token = cookies[COOKIE];
+
+  if (!secret || !token) return false;
+
+  const [value, sig] = token.split(".");
+
+  if (!value || !sig) return false;
+
+  const expected = sign(value, secret);
+
   try {
-    if (req.method === "GET") return Response.json(await jsonbin("GET"));
-    if (!["PUT","POST"].includes(req.method)) return Response.json({error:"Method not allowed"},{status:405});
-    if (!(await isAdmin(req))) return Response.json({error:"Login admin diperlukan."},{status:401});
-    const body = await req.json();
-    if (!body || !Array.isArray(body.lines)) return Response.json({error:"Format data harus { lines: [] }."},{status:400});
-    if (body.lines.length > 500) return Response.json({error:"Maksimal 500 line."},{status:400});
-    for (const x of body.lines) {
-      if (!x.id || !String(x.line||"").trim() || !(Number(x.minutes)>0) || !(Number(x.std)>0) || !(Number(x.actualCt)>0) || Number(x.qty)<0)
-        return Response.json({error:"Ada data line yang tidak valid."},{status:400});
+    return crypto.timingSafeEqual(
+      Buffer.from(sig),
+      Buffer.from(expected)
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function readBody(req) {
+  const chunks = [];
+
+  for await (const chunk of req) {
+    chunks.push(chunk);
+  }
+
+  const raw = Buffer.concat(chunks).toString("utf8");
+
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+async function jsonbin(method, body) {
+  if (!BIN || !KEY) {
+    throw new Error("Environment JSONBin belum lengkap.");
+  }
+
+  const controller = new AbortController();
+
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 15000);
+
+  try {
+    const url =
+      method === "GET"
+        ? `${BASE}/latest`
+        : BASE;
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "X-Access-Key": KEY,
+        "Content-Type": "application/json",
+        "X-Bin-Versioning": "true"
+      },
+      ...(body !== undefined
+        ? {
+            body: JSON.stringify(body)
+          }
+        : {}),
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+
+    let data = {};
+
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = {};
     }
-    return Response.json(await jsonbin("PUT", {lines:body.lines}));
-  } catch (e) {
-    return Response.json({error:e.message || "Server error"},{status:500});
+
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+        data.error ||
+        `JSONBin error ${response.status}`
+      );
+    }
+
+    return data.record ?? data;
+
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export default async function handler(req, res) {
+  try {
+
+    if (!BIN || !KEY) {
+      return res.status(500).json({
+        error: "Environment JSONBin belum lengkap."
+      });
+    }
+
+    // =========================
+    // PUBLIC GET
+    // =========================
+
+    if (req.method === "GET") {
+      const data = await jsonbin("GET");
+
+      return res.status(200).json(data);
+    }
+
+    // =========================
+    // ADMIN ONLY
+    // =========================
+
+    if (!["PUT", "POST"].includes(req.method)) {
+      return res.status(405).json({
+        error: "Method not allowed"
+      });
+    }
+
+    if (!isAdmin(req)) {
+      return res.status(401).json({
+        error: "Login admin diperlukan."
+      });
+    }
+
+    const body = await readBody(req);
+
+    if (!body || !Array.isArray(body.lines)) {
+      return res.status(400).json({
+        error: "Format data harus { lines: [] }."
+      });
+    }
+
+    if (body.lines.length > 500) {
+      return res.status(400).json({
+        error: "Maksimal 500 line."
+      });
+    }
+
+    for (const x of body.lines) {
+
+      if (
+        !x.id ||
+        !String(x.line || "").trim() ||
+        !(Number(x.minutes) > 0) ||
+        !(Number(x.stdCT) > 0) ||
+        !(Number(x.actualCT) > 0)
+      ) {
+        return res.status(400).json({
+          error: "Ada data line yang tidak valid."
+        });
+      }
+    }
+
+    const result = await jsonbin("PUT", {
+      lines: body.lines
+    });
+
+    return res.status(200).json(result);
+
+  } catch (error) {
+
+    console.error("PRODUCTIVITY ERROR:", error);
+
+    if (error.name === "AbortError") {
+      return res.status(504).json({
+        error: "Koneksi ke JSONBin timeout."
+      });
+    }
+
+    return res.status(500).json({
+      error: error.message || "Server error"
+    });
   }
 }
