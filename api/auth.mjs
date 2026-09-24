@@ -1,127 +1,96 @@
-import crypto from "node:crypto";
+const BIN = process.env.JSONBIN_BIN_ID;
+const KEY = process.env.JSONBIN_ACCESS_KEY;
+const BASE = `https://api.jsonbin.io/v3/b/${BIN}`;
 
-const COOKIE = "prod_session";
+async function jsonbin(method, body) {
+  const url = method === "GET" ? `${BASE}/latest` : BASE;
 
-function sign(value, secret) {
-  return crypto
-    .createHmac("sha256", secret)
-    .update(value)
-    .digest("base64url");
-}
+  const r = await fetch(url, {
+    method,
+    headers: {
+      "X-Access-Key": KEY,
+      "Content-Type": "application/json",
+      "X-Bin-Versioning": "true"
+    },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
 
-function parseCookies(req) {
-  const raw = req.headers.cookie || "";
+  const j = await r.json().catch(() => ({}));
 
-  return Object.fromEntries(
-    raw
-      .split(";")
-      .map(x => x.trim().split("="))
-      .filter(x => x.length === 2)
-  );
-}
-
-function authorized(req) {
-  const secret = process.env.SESSION_SECRET;
-  const cookies = parseCookies(req);
-  const token = cookies[COOKIE];
-
-  if (!secret || !token) return false;
-
-  const [value, sig] = token.split(".");
-
-  if (!value || !sig) return false;
-
-  const expected = sign(value, secret);
-
-  return crypto.timingSafeEqual(
-    Buffer.from(sig),
-    Buffer.from(expected)
-  );
-}
-
-async function readBody(req) {
-  const chunks = [];
-
-  for await (const chunk of req) {
-    chunks.push(chunk);
+  if (!r.ok) {
+    throw new Error(j.message || j.error || `JSONBin error ${r.status}`);
   }
 
-  const raw = Buffer.concat(chunks).toString("utf8");
-
-  if (!raw) return {};
-
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
+  return j.record ?? j;
 }
 
-export default async function handler(req, res) {
+export default async function handler(req) {
+
+  if (!BIN || !KEY) {
+    return Response.json(
+      { error: "Environment JSONBin belum lengkap." },
+      { status: 500 }
+    );
+  }
+
   try {
-    // CEK SESSION
+
+    // Baca data
     if (req.method === "GET") {
-      return res.status(200).json({
-        authorized: authorized(req)
-      });
+      return Response.json(await jsonbin("GET"));
     }
 
-    // LOGIN
-    if (req.method === "POST") {
-      const body = await readBody(req);
+    // Simpan / update data
+    if (req.method === "PUT") {
 
-      if (
-        !process.env.ADMIN_PASSWORD ||
-        body.password !== process.env.ADMIN_PASSWORD
-      ) {
-        return res.status(401).json({
-          error: "Password salah."
-        });
+      const body = await req.json();
+
+      if (!body || !Array.isArray(body.lines)) {
+        return Response.json(
+          { error: "Format data harus { lines: [] }." },
+          { status: 400 }
+        );
       }
 
-      const value = `${Date.now()}-${crypto.randomBytes(16).toString("hex")}`;
-
-      const secret = process.env.SESSION_SECRET;
-
-      if (!secret) {
-        return res.status(500).json({
-          error: "SESSION_SECRET belum tersedia."
-        });
+      if (body.lines.length > 500) {
+        return Response.json(
+          { error: "Maksimal 500 line." },
+          { status: 400 }
+        );
       }
 
-      const token = `${value}.${sign(value, secret)}`;
+      for (const x of body.lines) {
 
-      res.setHeader(
-        "Set-Cookie",
-        `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800`
+        if (
+          !x.id ||
+          !String(x.line || "").trim() ||
+          !(Number(x.minutes) > 0) ||
+          !(Number(x.std) > 0) ||
+          !(Number(x.actualCt) > 0) ||
+          !(Number(x.qty) >= 0)
+        ) {
+          return Response.json(
+            { error: "Ada data line yang tidak valid." },
+            { status: 400 }
+          );
+        }
+      }
+
+      return Response.json(
+        await jsonbin("PUT", { lines: body.lines })
       );
-
-      return res.status(200).json({
-        ok: true
-      });
     }
 
-    // LOGOUT
-    if (req.method === "DELETE") {
-      res.setHeader(
-        "Set-Cookie",
-        `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
-      );
+    return Response.json(
+      { error: "Method not allowed" },
+      { status: 405 }
+    );
 
-      return res.status(200).json({
-        ok: true
-      });
-    }
+  } catch (e) {
 
-    return res.status(405).json({
-      error: "Method not allowed"
-    });
-
-  } catch (error) {
-    console.error("AUTH ERROR:", error);
-
-    return res.status(500).json({
-      error: error.message || "Server error"
-    });
+    return Response.json(
+      { error: e.message || "Server error" },
+      { status: 500 }
+    );
   }
 }
