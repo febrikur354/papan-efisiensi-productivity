@@ -19,6 +19,25 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:12px 10p
 .notice{margin:12px 0;padding:11px 13px;border-radius:9px;background:#eef5ff;color:#174b9c;font-size:13px}.error{background:#fff0f0;color:#a51f1f}
 .modal{position:fixed;inset:0;background:#081321aa;display:flex;align-items:center;justify-content:center;z-index:20}.login{background:#fff;padding:26px;border-radius:16px;width:min(390px,92vw)}.login h2{margin-top:0}.login input{width:100%;padding:12px;margin:7px 0 12px;border:1px solid #ccd5e2;border-radius:9px}.hidden{display:none!important}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.grid,.formgrid{grid-template-columns:1fr}.wrap{padding:12px}header{padding:15px}}
+  /* FIX LOGIN MODAL */
+#loginModal{
+  pointer-events:auto !important;
+  z-index:9999 !important;
+}
+
+#loginModal .login{
+  position:relative;
+  z-index:10000 !important;
+  pointer-events:auto !important;
+}
+
+#loginModal input,
+#loginModal button{
+  position:relative;
+  z-index:10001 !important;
+  pointer-events:auto !important;
+  user-select:text !important;
+}
 </style>
 </head>
 <body>
@@ -51,7 +70,7 @@ table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:12px 10p
 </section>
 </div>
 
-<div id="loginModal" class="modal"><form class="login" id="loginForm"><h2>Login Admin</h2><p style="color:#687386;font-size:13px">Masukkan password admin Vercel.</p><input id="password" type="password" placeholder="Password" autocomplete="current-password"><button class="primary" style="width:100%">Login</button><p id="loginErr" style="color:#c62828;font-size:12px"></p></form></div>
+<div id="loginModal" class="modal"><form class="login" id="loginForm"><h2>Login Admin</h2><p style="color:#687386;font-size:13px">Masukkan password admin Vercel.</p><input id="password" type="password" placeholder="Password" autofocus>autocomplete="current-password"><button class="primary" style="width:100%">Login</button><p id="loginErr" style="color:#c62828;font-size:12px"></p></form></div>
 
 <script>
 let data=[]; const $=id=>document.getElementById(id);
