@@ -1,231 +1,94 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Papan Efisiensi Productivity</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 :root{--navy:#12345b;--blue:#2167e8;--bg:#f4f7fb;--card:#fff;--text:#0f2340;--muted:#61728a;--border:#d7e1ef;--good:#087f3e;--goodbg:#e5f7ed;--warn:#9a6500;--warnbg:#fff4d6;--low:#b42318;--lowbg:#ffe8e6}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
-header{background:var(--navy);color:#fff;padding:22px 3%;display:flex;align-items:center;justify-content:space-between;gap:20px}
-h1{margin:0;font-size:25px}.sub{margin-top:6px;font-size:14px;opacity:.9}header a{color:#fff;font-weight:600}
-main{max-width:1250px;margin:28px auto;padding:0 18px}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:var(--card);border:1px solid #e0e8f2;border-radius:15px;box-shadow:0 7px 24px rgba(22,45,75,.06)}
-.stat{padding:22px 20px}.stat .label{color:#63748b;font-size:13px}.stat .value{font-size:29px;font-weight:800;margin-top:9px}
-.section{margin-top:18px;padding:20px}.section h2{margin:0 0 18px;font-size:21px}
-.formgrid{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr 1fr auto auto;gap:10px;align-items:end}
-label{display:block;font-size:12px;color:#60728a;margin:0 0 6px}input,select{width:100%;height:40px;border:1px solid #c9d6e8;border-radius:8px;padding:0 12px;font-size:14px;outline:none;background:#fff}
-input:focus,select:focus{border-color:#4b83ef;box-shadow:0 0 0 3px rgba(33,103,232,.1)}
-button{height:40px;border:0;border-radius:9px;padding:0 16px;font-weight:700;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{background:#e9eef6;color:#233852}.danger{background:#ffe5e3;color:#b42318}
-.alert{margin-top:12px;padding:11px 13px;border-radius:8px;font-size:13px;display:none}.alert.ok{display:block;background:#e8f7ee;color:#087f3e}.alert.err{display:block;background:#ffe8e6;color:#b42318}
-.toolbar{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}.filters{display:flex;gap:10px;flex-wrap:wrap}.filter{min-width:180px}
-.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1080px}th,td{padding:12px 10px;border-bottom:1px solid #e4ebf3;text-align:left;font-size:13px;white-space:nowrap}th{background:#f7f9fc;color:#4f6480;font-weight:700}td strong{font-weight:800}
-.badge{display:inline-block;padding:5px 10px;border-radius:99px;font-weight:700;font-size:12px}.good{background:var(--goodbg);color:var(--good)}.warning{background:var(--warnbg);color:var(--warn)}.low{background:var(--lowbg);color:var(--low)}
-.actions{display:flex;gap:6px}.small{height:34px;padding:0 12px;font-size:12px}
-.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}.chartbox{padding:18px}.chartbox h3{margin:0 0 14px;font-size:17px}.chartcanvas{height:320px;position:relative}
-.empty{text-align:center;color:#72839a;padding:25px}.hint{font-size:12px;color:#71829a;margin-top:8px}
-@media(max-width:1050px){.formgrid{grid-template-columns:repeat(4,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}.charts{grid-template-columns:1fr}}
-@media(max-width:650px){main{padding:0 10px}.grid4{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr 1fr}.formgrid .wide{grid-column:1/-1}header{padding:18px}.toolbar{align-items:stretch}.filters{width:100%}.filter{flex:1;min-width:140px}}
+header{background:var(--navy);color:#fff;padding:22px 3%;display:flex;justify-content:space-between;align-items:center}h1{margin:0;font-size:25px}.sub{margin-top:6px;font-size:14px;opacity:.9}header a{color:#fff;font-weight:700}
+main{max-width:1350px;margin:24px auto;padding:0 18px}.card{background:#fff;border:1px solid #e0e8f2;border-radius:15px;box-shadow:0 7px 24px rgba(22,45,75,.06)}
+.section{padding:20px;margin-top:16px}.section h2{margin:0 0 16px;font-size:20px}
+.linebar{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.linebtn{height:42px;padding:0 18px;border:1px solid #cad7e7;border-radius:10px;background:#f5f8fc;color:#183452;font-weight:800;cursor:pointer}.linebtn.active{background:var(--blue);color:#fff;border-color:var(--blue)}.addbtn{height:42px;padding:0 17px;border:1px dashed #7b94b2;border-radius:10px;background:#fff;color:#2167e8;font-weight:800;cursor:pointer}
+.formgrid{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr 1fr auto auto;gap:10px;align-items:end}label{display:block;font-size:12px;color:#60728a;margin-bottom:6px}input{width:100%;height:40px;border:1px solid #c9d6e8;border-radius:8px;padding:0 12px;font-size:14px;background:#fff}button{cursor:pointer}.primary{height:40px;border:0;border-radius:9px;padding:0 16px;background:var(--blue);color:#fff;font-weight:800}.secondary{height:40px;border:0;border-radius:9px;padding:0 16px;background:#e9eef6;color:#233852;font-weight:800}
+.alert{display:none;margin-top:12px;padding:11px 13px;border-radius:8px;font-size:13px}.alert.ok{display:block;background:#e8f7ee;color:#087f3e}.alert.err{display:block;background:#ffe8e6;color:#b42318}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.stat{padding:18px}.label{font-size:12px;color:var(--muted)}.value{font-size:27px;font-weight:850;margin-top:7px}
+.content{display:grid;grid-template-columns:1fr 1fr;gap:18px}.chartbox{height:330px;position:relative}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:11px 9px;border-bottom:1px solid #e4ebf3;text-align:left;font-size:12px;white-space:nowrap}th{background:#f7f9fc;color:#52657d}.badge{display:inline-block;padding:5px 10px;border-radius:99px;font-weight:800;font-size:12px}.good{background:var(--goodbg);color:var(--good)}.warning{background:var(--warnbg);color:var(--warn)}.low{background:var(--lowbg);color:var(--low)}
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.filters{display:flex;gap:8px}.filters input{width:180px}.actions{display:flex;gap:5px}.small{height:32px;padding:0 10px;border:0;border-radius:7px;font-size:12px;font-weight:700}.edit{background:#e9eef6}.del{background:#ffe5e3;color:#b42318}
+.modal{position:fixed;inset:0;background:rgba(10,28,50,.48);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}.modal.show{display:flex}.modalbox{background:#fff;border-radius:15px;width:min(420px,100%);padding:22px}.modalbox h3{margin:0 0 15px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+@media(max-width:1050px){.formgrid{grid-template-columns:repeat(4,1fr)}.stats{grid-template-columns:repeat(3,1fr)}.content{grid-template-columns:1fr}}
+@media(max-width:650px){.formgrid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.toolbar{align-items:stretch;flex-direction:column}.filters{width:100%}.filters input{width:100%}}
 </style>
 </head>
 <body>
-<header>
-  <div><h1>🏭 Papan Efisiensi Productivity</h1><div class="sub">Panel Admin • tanpa login</div></div>
-  <a href="/public.html" target="_blank">Public Board ↗</a>
-</header>
-
+<header><div><h1>🏭 Papan Efisiensi Productivity</h1><div class="sub">Panel Admin • Productivity per Line</div></div><a href="/public.html" target="_blank">Public Board ↗</a></header>
 <main>
-  <div class="grid4">
-    <div class="card stat"><div class="label">Total Line</div><div class="value" id="totalLine">0</div></div>
-    <div class="card stat"><div class="label">Rata-rata Efisiensi</div><div class="value" id="avgEff">0.0%</div></div>
-    <div class="card stat"><div class="label">Line ≥ 95%</div><div class="value" id="goodLine">0</div></div>
-    <div class="card stat"><div class="label">Aktual Produksi</div><div class="value" id="totalQty">0</div></div>
-  </div>
+<section class="card section">
+<h2>1. Pilih Line</h2>
+<div id="linebar" class="linebar"></div>
+</section>
 
-  <section class="card section">
-    <h2 id="formTitle">Input / Update Line</h2>
-    <div class="formgrid">
-      <div>
-        <label>Tanggal Produksi</label>
-        <input id="date" type="date">
-      </div>
-      <div>
-        <label>Nama Line</label>
-        <input id="line" placeholder="Contoh: REAR 1">
-      </div>
-      <div>
-        <label>Waktu Produksi (menit)</label>
-        <input id="minutes" type="number" min="0.01" step="0.01" placeholder="480">
-      </div>
-      <div>
-        <label>CT Standard (detik/pcs)</label>
-        <input id="std" type="number" min="0.01" step="0.01" placeholder="45">
-      </div>
-      <div>
-        <label>CT Actual (detik/pcs)</label>
-        <input id="actualCt" type="number" min="0.01" step="0.01" placeholder="48">
-      </div>
-      <div>
-        <label>Aktual Produksi (pcs)</label>
-        <input id="qty" type="number" min="0" step="1" placeholder="560">
-      </div>
-      <button class="primary" id="save">Simpan Data</button>
-      <button class="secondary" id="reset">Reset</button>
-    </div>
-    <div class="hint">Target = waktu produksi × 60 ÷ CT standard. Efisiensi = CT standard ÷ CT actual × 100%.</div>
-    <div id="alert" class="alert"></div>
-  </section>
+<section class="card section">
+<h2 id="inputTitle">2. Input Productivity — belum pilih line</h2>
+<div class="formgrid">
+<div><label>Tanggal Produksi</label><input id="date" type="date"></div>
+<div><label>Waktu Produksi (menit)</label><input id="minutes" type="number" min=".01" step=".01" placeholder="480"></div>
+<div><label>CT Standard (detik/pcs)</label><input id="std" type="number" min=".01" step=".01" placeholder="45"></div>
+<div><label>CT Actual (detik/pcs)</label><input id="actualCt" type="number" min=".01" step=".01" placeholder="48"></div>
+<div><label>Aktual Produksi (pcs)</label><input id="qty" type="number" min="0" step="1" placeholder="560"></div>
+<button id="save" class="primary">Simpan Data</button><button id="reset" class="secondary">Reset</button>
+</div>
+<div style="font-size:12px;color:#71829a;margin-top:8px">Target = waktu × 60 ÷ CT standard • Efisiensi = CT standard ÷ CT actual × 100%</div>
+<div id="alert" class="alert"></div>
+</section>
 
-  <section class="card section">
-    <div class="toolbar">
-      <h2 style="margin:0">Data Productivity</h2>
-      <div class="filters">
-        <div class="filter"><label>Cari nama line</label><input id="search" placeholder="🔎 Cari nama line..."></div>
-        <div class="filter"><label>Filter tanggal</label><input id="filterDate" type="date"></div>
-      </div>
-    </div>
-    <div class="tablewrap">
-      <table>
-        <thead><tr>
-          <th>Tanggal</th><th>Line</th><th>Waktu</th><th>CT Std</th><th>CT Actual</th>
-          <th>Efisiensi</th><th>Target</th><th>Aktual</th><th>Achievement</th><th>Status</th><th>Aksi</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-      <div id="empty" class="empty" style="display:none">Belum ada data.</div>
-    </div>
-  </section>
+<section class="section" style="padding:0;background:transparent;border:0;box-shadow:none">
+<div class="stats">
+<div class="card stat"><div class="label">Line Aktif</div><div class="value" id="activeLine">-</div></div>
+<div class="card stat"><div class="label">Rata-rata Efisiensi</div><div class="value" id="avgEff">0.0%</div></div>
+<div class="card stat"><div class="label">Total Target</div><div class="value" id="totalTarget">0</div></div>
+<div class="card stat"><div class="label">Total Aktual</div><div class="value" id="totalQty">0</div></div>
+<div class="card stat"><div class="label">Achievement</div><div class="value" id="achievement">0.0%</div></div>
+</div>
+</section>
 
-  <div class="charts">
-    <section class="card chartbox">
-      <h3>📈 Grafik Efisiensi per Line</h3>
-      <div class="chartcanvas"><canvas id="effChart"></canvas></div>
-    </section>
-    <section class="card chartbox">
-      <h3>📊 Actual Produksi vs Target</h3>
-      <div class="chartcanvas"><canvas id="qtyChart"></canvas></div>
-    </section>
-  </div>
+<section class="card section">
+<div class="toolbar"><h2 style="margin:0">3. History Productivity — <span id="historyLine">-</span></h2><div class="filters"><input id="searchDate" type="date" title="Filter tanggal"></div></div>
+<div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Waktu</th><th>CT Std</th><th>CT Actual</th><th>Efisiensi</th><th>Target</th><th>Aktual</th><th>Achievement</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tbody"></tbody></table><div id="empty" style="text-align:center;color:#71829a;padding:24px;display:none">Belum ada data untuk line ini.</div></div>
+</section>
+
+<section class="card section">
+<h2>4. Grafik Productivity — <span id="chartLine">-</span></h2>
+<div class="content"><div class="chartbox"><canvas id="effChart"></canvas></div><div class="chartbox"><canvas id="qtyChart"></canvas></div></div>
+</section>
 </main>
 
+<div id="modal" class="modal"><div class="modalbox"><h3>Tambah Line Baru</h3><label>Nama Line</label><input id="newLine" placeholder="Contoh: REAR 3"><div class="modalActions"><button class="secondary" id="cancelAdd">Batal</button><button class="primary" id="confirmAdd">Tambah Line</button></div></div></div>
+
 <script>
-const API='/api/productivity';
-let lines=[];
-let effChart=null, qtyChart=null;
-
-const $=id=>document.getElementById(id);
-const today=()=>new Date().toISOString().slice(0,10);
-
-function calc(x){
-  const minutes=Number(x.minutes)||0, std=Number(x.std)||0, actualCt=Number(x.actualCt)||0, qty=Number(x.qty)||0;
-  const target=std>0 ? minutes*60/std : 0;
-  const efficiency=actualCt>0 ? std/actualCt*100 : 0;
-  const achievement=target>0 ? qty/target*100 : 0;
-  let status='LOW'; if(efficiency>=95) status='GOOD'; else if(efficiency>=85) status='WARNING';
-  return {target,efficiency,achievement,status};
-}
+const API='/api/productivity';let record={lines:[],lineMaster:[]},selectedLine='',effChart=null,qtyChart=null;
+const $=id=>document.getElementById(id);const today=()=>new Date().toISOString().slice(0,10);
 function fmt(n,d=1){return Number(n||0).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function showAlert(msg,ok=false){const a=$('alert');a.textContent=msg;a.className='alert '+(ok?'ok':'err');clearTimeout(showAlert.t);showAlert.t=setTimeout(()=>a.className='alert',3500)}
-function normalize(x){
-  return {...x,date:x.date||today(),id:x.id||crypto.randomUUID()};
-}
-async function api(method='GET',body){
-  const r=await fetch(API,{method,headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(j.error||j.message||`HTTP ${r.status}`);
-  return j;
-}
-async function load(){
-  try{
-    const data=await api();
-    lines=Array.isArray(data?.lines)?data.lines.map(normalize):[];
-    render();
-  }catch(e){showAlert('Gagal mengambil data: '+e.message)}
-}
-async function save(){
-  const date=$('date').value||today(), line=$('line').value.trim();
-  const minutes=Number($('minutes').value), std=Number($('std').value), actualCt=Number($('actualCt').value), qty=Number($('qty').value);
-  if(!line||!date||!(minutes>0)||!(std>0)||!(actualCt>0)||!(qty>=0)){showAlert('Lengkapi tanggal, line, waktu, CT standard, CT actual, dan aktual produksi.');return}
-  const editId=$('save').dataset.editId;
-  const item={id:editId||crypto.randomUUID(),date,line,minutes,std,actualCt,qty};
-  const next=editId?lines.map(x=>x.id===editId?item:x):[...lines,item];
-  try{
-    $('save').disabled=true;$('save').textContent='Menyimpan...';
-    await api('PUT',{lines:next});
-    lines=next;resetForm();render();showAlert('Data berhasil disimpan.',true);
-  }catch(e){showAlert('Gagal menyimpan: '+e.message)}
-  finally{$('save').disabled=false;$('save').textContent='Simpan Data'}
-}
-function editLine(id){
-  const x=lines.find(v=>v.id===id);if(!x)return;
-  $('date').value=x.date||today();$('line').value=x.line||'';$('minutes').value=x.minutes??'';
-  $('std').value=x.std??'';$('actualCt').value=x.actualCt??'';$('qty').value=x.qty??'';
-  $('save').dataset.editId=id;$('save').textContent='Update Data';$('formTitle').textContent='Edit / Update Line';
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-async function deleteLine(id){
-  const x=lines.find(v=>v.id===id);if(!x)return;
-  if(!confirm(`Hapus data line "${x.line}" tanggal ${x.date||'-'}?`))return;
-  const next=lines.filter(v=>v.id!==id);
-  try{await api('PUT',{lines:next});lines=next;render();showAlert('Data berhasil dihapus.',true)}
-  catch(e){showAlert('Gagal menghapus: '+e.message)}
-}
-function resetForm(){
-  $('date').value=today();$('line').value='';$('minutes').value='';$('std').value='';$('actualCt').value='';$('qty').value='';
-  delete $('save').dataset.editId;$('save').textContent='Simpan Data';$('formTitle').textContent='Input / Update Line';
-}
-function filtered(){
-  const q=$('search').value.trim().toLowerCase(), d=$('filterDate').value;
-  return lines.filter(x=>(!q||String(x.line).toLowerCase().includes(q))&&(!d||x.date===d))
-    .sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(a.line).localeCompare(String(b.line)));
-}
-function render(){
-  const data=filtered(), tb=$('tbody');tb.innerHTML='';
-  $('empty').style.display=data.length?'none':'block';
-  data.forEach(x=>{
-    const c=calc(x), cls=c.status==='GOOD'?'good':c.status==='WARNING'?'warning':'low';
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(x.date||'-')}</td><td><strong>${esc(x.line)}</strong></td>
-      <td>${fmt(x.minutes,0)} min</td><td>${fmt(x.std,2)}</td><td>${fmt(x.actualCt,2)}</td>
-      <td><strong>${fmt(c.efficiency,1)}%</strong></td><td>${fmt(c.target,0)}</td><td>${fmt(x.qty,0)}</td>
-      <td>${fmt(c.achievement,1)}%</td><td><span class="badge ${cls}">${c.status}</span></td>
-      <td><div class="actions"><button class="secondary small" onclick="editLine('${esc(x.id)}')">Edit</button><button class="danger small" onclick="deleteLine('${esc(x.id)}')">Hapus</button></div></td>`;
-    tb.appendChild(tr);
-  });
-  updateStats();drawCharts();
-}
-function updateStats(){
-  const data=filtered(), n=data.length;
-  const avg=n?data.reduce((s,x)=>s+calc(x).efficiency,0)/n:0;
-  $('totalLine').textContent=new Set(data.map(x=>x.line)).size;
-  $('avgEff').textContent=fmt(avg,1)+'%';
-  $('goodLine').textContent=data.filter(x=>calc(x).efficiency>=95).length;
-  $('totalQty').textContent=data.reduce((s,x)=>s+(Number(x.qty)||0),0).toLocaleString('id-ID');
-}
-function makeDateLineData(data,key){
-  const dates=[...new Set(data.map(x=>x.date||'-'))].sort();
-  const names=[...new Set(data.map(x=>x.line))];
-  const datasets=names.map(name=>({
-    label:name,data:dates.map(d=>{const rows=data.filter(x=>(x.date||'-')===d&&x.line===name);if(!rows.length)return null;return rows.reduce((s,x)=>s+calc(x)[key],0)/rows.length;}),
-    tension:.25,spanGaps:true
-  }));
-  return {dates,datasets};
-}
-function drawCharts(){
-  const data=filtered();
-  if(effChart)effChart.destroy();if(qtyChart)qtyChart.destroy();
-  const e=makeDateLineData(data,'efficiency');
-  effChart=new Chart($('effChart'),{type:'line',data:{labels:e.dates,datasets:e.datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false,suggestedMin:70,title:{display:true,text:'Efisiensi (%)'}},x:{title:{display:true,text:'Tanggal Produksi'}}}}});
-  const dates=[...new Set(data.map(x=>x.date||'-'))].sort();
-  const target=dates.map(d=>data.filter(x=>(x.date||'-')===d).reduce((s,x)=>s+calc(x).target,0));
-  const actual=dates.map(d=>data.filter(x=>(x.date||'-')===d).reduce((s,x)=>s+(Number(x.qty)||0),0));
-  qtyChart=new Chart($('qtyChart'),{type:'bar',data:{labels:dates,datasets:[{label:'Target',data:target},{label:'Aktual',data:actual}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,title:{display:true,text:'Qty (pcs)'}},x:{title:{display:true,text:'Tanggal Produksi'}}}}});
-}
-$('save').addEventListener('click',save);$('reset').addEventListener('click',resetForm);
-$('search').addEventListener('input',render);$('filterDate').addEventListener('change',render);
-$('date').value=today();load();
+function calc(x){const min=+x.minutes||0,std=+x.std||0,ct=+x.actualCt||0,qty=+x.qty||0,target=std?min*60/std:0,eff=ct?std/ct*100:0,ach=target?qty/target*100:0;return{target,eff,ach,status:eff>=95?'GOOD':eff>=85?'WARNING':'LOW'}}
+function alertMsg(m,ok=false){const a=$('alert');a.textContent=m;a.className='alert '+(ok?'ok':'err');setTimeout(()=>a.className='alert',3500)}
+async function api(method='GET',body){const r=await fetch(API,{method,headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error||j.message||`HTTP ${r.status}`);return j}
+async function load(){try{const j=await api();record={lines:Array.isArray(j?.lines)?j.lines.map(x=>({...x,date:x.date||today()})):[],lineMaster:Array.isArray(j?.lineMaster)?j.lineMaster:[]};record.lineMaster=[...new Set([...record.lineMaster,...record.lines.map(x=>x.line).filter(Boolean)])];if(!selectedLine)selectedLine=record.lineMaster[0]||'';else if(!record.lineMaster.includes(selectedLine))selectedLine=record.lineMaster[0]||'';render()}catch(e){alertMsg('Gagal mengambil data: '+e.message)}}
+function renderLineButtons(){const bar=$('linebar');bar.innerHTML='';record.lineMaster.forEach(name=>{const b=document.createElement('button');b.className='linebtn '+(name===selectedLine?'active':'');b.textContent=name;b.onclick=()=>{selectedLine=name;resetForm();render()};bar.appendChild(b)});const add=document.createElement('button');add.className='addbtn';add.textContent='+ Tambah Line';add.onclick=()=>{$('newLine').value='';$('modal').classList.add('show');$('newLine').focus()};bar.appendChild(add)}
+function current(){return record.lines.filter(x=>x.line===selectedLine).sort((a,b)=>new Date(a.date)-new Date(b.date))}
+function render(){renderLineButtons();$('activeLine').textContent=selectedLine||'-';$('inputTitle').textContent='2. Input Productivity — '+(selectedLine||'belum pilih line');$('historyLine').textContent=selectedLine||'-';$('chartLine').textContent=selectedLine||'-';const arr=current(),fd=$('searchDate').value,data=fd?arr.filter(x=>x.date===fd):arr;renderTable(data);renderStats(arr);drawCharts(arr)}
+function renderTable(arr){const tb=$('tbody');tb.innerHTML='';$('empty').style.display=arr.length?'none':'block';arr.forEach(x=>{const c=calc(x),cls=c.status==='GOOD'?'good':c.status==='WARNING'?'warning':'low';const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(x.date)}</td><td>${fmt(x.minutes,0)} min</td><td>${fmt(x.std,2)}</td><td>${fmt(x.actualCt,2)}</td><td><strong>${fmt(c.eff,1)}%</strong></td><td>${fmt(c.target,0)}</td><td>${fmt(x.qty,0)}</td><td>${fmt(c.ach,1)}%</td><td><span class="badge ${cls}">${c.status}</span></td><td><div class="actions"><button class="small edit" onclick="editRow('${esc(x.id)}')">Edit</button><button class="small del" onclick="deleteRow('${esc(x.id)}')">Hapus</button></div></td>`;tb.appendChild(tr)})}
+function renderStats(arr){let t=0,q=0,e=0;arr.forEach(x=>{const c=calc(x);t+=c.target;q+=+x.qty||0;e+=c.eff});$('avgEff').textContent=fmt(arr.length?e/arr.length:0,1)+'%';$('totalTarget').textContent=Math.round(t).toLocaleString('id-ID');$('totalQty').textContent=Math.round(q).toLocaleString('id-ID');$('achievement').textContent=fmt(t?q/t*100:0,1)+'%'}
+function drawCharts(arr){if(effChart)effChart.destroy();if(qtyChart)qtyChart.destroy();const dates=[...new Set(arr.map(x=>x.date))].sort((a,b)=>new Date(a)-new Date(b));const labels=dates.map(d=>{const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d});const eff=dates.map(d=>{const r=arr.filter(x=>x.date===d);return r.reduce((s,x)=>s+calc(x).eff,0)/r.length});const target=dates.map(d=>arr.filter(x=>x.date===d).reduce((s,x)=>s+calc(x).target,0));const qty=dates.map(d=>arr.filter(x=>x.date===d).reduce((s,x)=>s+(+x.qty||0),0));effChart=new Chart($('effChart'),{type:'line',data:{labels,datasets:[{label:'Efisiensi %',data:eff,tension:.25,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{suggestedMin:70,title:{display:true,text:'Efisiensi (%)'}},x:{title:{display:true,text:'Tanggal Produksi'}}}}});qtyChart=new Chart($('qtyChart'),{type:'bar',data:{labels,datasets:[{label:'Target',data:target},{label:'Aktual',data:qty}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,title:{display:true,text:'Qty (pcs)'}},x:{title:{display:true,text:'Tanggal Produksi'}}}}})}
+async function save(){if(!selectedLine){alertMsg('Pilih atau tambah line terlebih dahulu.');return}const date=$('date').value||today(),minutes=+$('minutes').value,std=+$('std').value,actualCt=+$('actualCt').value,qty=+$('qty').value;if(!date||!(minutes>0)||!(std>0)||!(actualCt>0)||!(qty>=0)){alertMsg('Lengkapi semua data input.');return}const editId=$('save').dataset.editId;const item={id:editId||crypto.randomUUID(),date,line:selectedLine,minutes,std,actualCt,qty};const next=editId?record.lines.map(x=>x.id===editId?item:x):[...record.lines,item];try{await api('PUT',{lines:next,lineMaster:record.lineMaster});record.lines=next;resetForm();render();alertMsg('Data berhasil disimpan.',true)}catch(e){alertMsg('Gagal menyimpan: '+e.message)}}
+function resetForm(){$('date').value=today();$('minutes').value='';$('std').value='';$('actualCt').value='';$('qty').value='';delete $('save').dataset.editId;$('save').textContent='Simpan Data'}
+function editRow(id){const x=record.lines.find(v=>v.id===id);if(!x)return;$('date').value=x.date;$('minutes').value=x.minutes;$('std').value=x.std;$('actualCt').value=x.actualCt;$('qty').value=x.qty;$('save').dataset.editId=id;$('save').textContent='Update Data';window.scrollTo({top:0,behavior:'smooth'})}
+async function deleteRow(id){if(!confirm('Hapus data productivity ini?'))return;const next=record.lines.filter(x=>x.id!==id);try{await api('PUT',{lines:next,lineMaster:record.lineMaster});record.lines=next;render();alertMsg('Data dihapus.',true)}catch(e){alertMsg('Gagal menghapus: '+e.message)}}
+$('save').onclick=save;$('reset').onclick=resetForm;$('searchDate').onchange=render;
+$('cancelAdd').onclick=()=>$('modal').classList.remove('show');
+$('confirmAdd').onclick=async()=>{const n=$('newLine').value.trim();if(!n)return alertMsg('Isi nama line.');if(record.lineMaster.some(x=>x.toLowerCase()===n.toLowerCase()))return alertMsg('Line tersebut sudah ada.');record.lineMaster.push(n);selectedLine=n;$('modal').classList.remove('show');try{await api('PUT',{lines:record.lines,lineMaster:record.lineMaster});render();alertMsg('Line '+n+' berhasil ditambahkan.',true)}catch(e){record.lineMaster=record.lineMaster.filter(x=>x!==n);alertMsg('Gagal menambah line: '+e.message)}};
+$('newLine').onkeydown=e=>{if(e.key==='Enter')$('confirmAdd').click()};$('date').value=today();load();
 </script>
 </body>
 </html>
