@@ -128,19 +128,7 @@ async function load(){
 
   }
 }
-    const j=await api('/api/productivity');
-    data=j.lines||[];
-    render();
-
-    $('#loginModal').classList.add('hidden');
-    $('#logout').classList.remove('hidden');
-
-  }catch(e){
-    show(e.message||'Gagal memuat data','error');
-    $('#loginModal').classList.remove('hidden');
-    $('#logout').classList.add('hidden');
-  }
-}
+   
 function render(){
  const q=$('search').value.toLowerCase();const rows=data.filter(x=>x.line.toLowerCase().includes(q));
  let sum=0,good=0,qty=0;data.forEach(x=>{const c=calc(x);sum+=c.eff;good+=c.eff>=95;qty+=Number(x.qty)||0});
