@@ -2,22 +2,34 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Papan Efisiensi Productivity</title>
+<title>Public Board - Papan Efisiensi Productivity</title>
 <style>
-:root{--bg:#071525;--card:#10243d;--text:#f5f8fc;--muted:#aab9cc;--good:#25c77a;--warn:#ffc44d;--bad:#ff6969;--accent:#4d9cff}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#061321,#0c1e34);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}.wrap{max-width:1400px;margin:auto;padding:24px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}h1{margin:0;font-size:28px}.sub{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.kpi,.line{background:#10243ddd;border:1px solid #ffffff12;border-radius:16px;padding:18px;box-shadow:0 8px 30px #0003}.kpi span{color:var(--muted);font-size:13px}.kpi b{font-size:30px;display:block;margin-top:5px}.board{margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.line h2{margin:0 0 12px}.row{display:flex;justify-content:space-between;margin:8px 0;color:var(--muted);font-size:13px}.row b{color:var(--text)}.eff{font-size:42px;font-weight:800;margin:10px 0}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}.track{height:11px;background:#ffffff12;border-radius:99px;overflow:hidden}.track i{display:block;height:100%;background:currentColor}.pill{display:inline-block;padding:6px 10px;border-radius:99px;background:#ffffff12;font-size:11px;font-weight:800}.empty{text-align:center;color:var(--muted);padding:50px}.refresh{color:var(--muted);font-size:12px}@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.board{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.wrap{padding:12px}.grid,.board{grid-template-columns:1fr}h1{font-size:21px}}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#10233f}header{background:#102a4a;color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center}header h1{margin:0;font-size:22px}header a{color:#fff}.wrap{max-width:1240px;margin:28px auto;padding:0 18px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.card{background:#fff;border:1px solid #e5ebf3;border-radius:14px;padding:20px}.label{font-size:13px;color:#607089}.value{font-size:28px;font-weight:800;margin-top:8px}.panel{background:#fff;border:1px solid #e5ebf3;border-radius:14px;padding:20px}.panel h2{margin:0 0 18px}.search{text-align:right;margin-bottom:12px}.search input{width:260px;padding:11px;border:1px solid #cbd7e6;border-radius:9px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{text-align:left;padding:11px 10px;border-bottom:1px solid #edf1f6;font-size:13px}th{color:#52627a;background:#f8fafc}.pill{display:inline-block;padding:4px 9px;border-radius:999px;font-weight:700;font-size:12px}.good{background:#e7f7ed;color:#14753a}.warning{background:#fff3d6;color:#9a6500}.low{background:#fde8e7;color:#b42318}.tablewrap{overflow:auto}.empty{text-align:center;color:#607089;padding:25px}.err{padding:12px;background:#fdecec;color:#a51d18;border-radius:9px;margin-bottom:15px}@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
-<body><div class="wrap">
-<header><div><h1>🏭 Papan Efisiensi Productivity</h1><div class="sub">Monitoring performa line produksi</div></div><div class="refresh">Auto refresh 30 detik</div></header>
-<section class="grid"><div class="kpi"><span>Total Line</span><b id="lines">0</b></div><div class="kpi"><span>Rata-rata Efisiensi</span><b id="eff">0%</b></div><div class="kpi"><span>Line ≥ 95%</span><b id="good">0</b></div><div class="kpi"><span>Aktual Produksi</span><b id="qty">0</b></div></section>
-<section id="board" class="board"></section>
-</div>
+<body>
+<header><h1>🏭 Papan Efisiensi Productivity</h1><a href="index.html">Panel Admin</a></header>
+<div class="wrap">
+<div id="err"></div>
+<section class="cards">
+<div class="card"><div class="label">Total Line</div><div id="total" class="value">0</div></div>
+<div class="card"><div class="label">Rata-rata Efisiensi</div><div id="avg" class="value">0%</div></div>
+<div class="card"><div class="label">Line ≥ 95%</div><div id="good" class="value">0</div></div>
+<div class="card"><div class="label">Aktual Produksi</div><div id="qty" class="value">0</div></div>
+</section>
+<section class="panel">
+<h2>Data Productivity</h2>
+<div class="search"><input id="search" placeholder="🔎 Cari nama line..."></div>
+<div class="tablewrap"><table><thead><tr><th>Line</th><th>Waktu</th><th>CT Std</th><th>CT Actual</th><th>Efisiensi</th><th>Target</th><th>Aktual</th><th>Achievement</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+</section></div>
 <script>
-const $=id=>document.getElementById(id);
-function calc(x){const target=(Number(x.minutes)*60/Number(x.std))||0;const eff=(Number(x.std)/Number(x.actualCt))*100||0;const ach=target?Number(x.qty)/target*100:0;return{target,eff,ach}}
-function cls(e){return e>=95?'good':e>=85?'warn':'bad'}function stat(e){return e>=95?'GOOD':e>=85?'WARNING':'LOW'}
-async function load(){try{const r=await fetch('/api/productivity');const j=await r.json();const d=j.lines||[];let se=0,g=0,q=0;d.forEach(x=>{const c=calc(x);se+=c.eff;g+=c.eff>=95;q+=Number(x.qty)||0});$('lines').textContent=d.length;$('eff').textContent=(d.length?se/d.length:0).toFixed(1)+'%';$('good').textContent=g;$('qty').textContent=q.toLocaleString('id-ID');$('board').innerHTML=d.length?d.map(x=>{const c=calc(x),cl=cls(c.eff);return `<article class="line"><div style="display:flex;justify-content:space-between;align-items:center"><h2>${String(x.line).replace(/[&<>]/g,'')}</h2><span class="pill ${cl}">${stat(c.eff)}</span></div><div class="eff ${cl}">${c.eff.toFixed(1)}%</div><div class="track ${cl}"><i style="width:${Math.min(c.eff,100)}%"></i></div><div class="row"><span>CT Standard</span><b>${Number(x.std).toFixed(2)} s</b></div><div class="row"><span>CT Actual</span><b>${Number(x.actualCt).toFixed(2)} s</b></div><div class="row"><span>Target Produksi</span><b>${Math.round(c.target).toLocaleString('id-ID')} pcs</b></div><div class="row"><span>Aktual Produksi</span><b>${Number(x.qty).toLocaleString('id-ID')} pcs</b></div><div class="row"><span>Achievement</span><b>${c.ach.toFixed(1)}%</b></div></article>`}).join(''):'<div class="line empty" style="grid-column:1/-1">Belum ada data productivity.</div>'}catch(e){$('board').innerHTML='<div class="line empty" style="grid-column:1/-1">Data belum dapat dimuat.</div>'}}
-load();setInterval(load,30000);
+const $=s=>document.querySelector(s);let data=[];
+async function load(){
+ try{const r=await fetch('/api/productivity');const j=await r.json();if(!r.ok)throw Error(j.error||'Gagal memuat data');data=Array.isArray(j.lines)?j.lines:[];render();}
+ catch(e){$('#err').innerHTML='<div class="err">'+e.message+'</div>';}
+}
+function c(x){return{target:x.minutes*60/x.std,eff:x.std/x.actualCt*100,achievement:(x.minutes*60/x.std)>0?x.qty/(x.minutes*60/x.std)*100:0}}
+function render(){const q=$('#search').value.toLowerCase();const rows=data.filter(x=>String(x.line).toLowerCase().includes(q));$('#total').textContent=data.length;$('#avg').textContent=(data.length?data.reduce((s,x)=>s+c(x).eff,0)/data.length:0).toFixed(1)+'%';$('#good').textContent=data.filter(x=>c(x).eff>=95).length;$('#qty').textContent=data.reduce((s,x)=>s+Number(x.qty||0),0).toLocaleString('id-ID');$('#rows').innerHTML=rows.length?rows.map(x=>{const z=c(x);const st=z.eff>=95?['GOOD','good']:z.eff>=85?['WARNING','warning']:['LOW','low'];return '<tr><td><b>'+x.line+'</b></td><td>'+x.minutes+' min</td><td>'+Number(x.std).toFixed(2)+'</td><td>'+Number(x.actualCt).toFixed(2)+'</td><td><b>'+z.eff.toFixed(1)+'%</b></td><td>'+z.target.toFixed(0)+'</td><td>'+x.qty+'</td><td>'+z.achievement.toFixed(1)+'%</td><td><span class="pill '+st[1]+'">'+st[0]+'</span></td></tr>'}).join(''):'<tr><td colspan="9" class="empty">Belum ada data line.</td></tr>'}
+$('#search').oninput=render;load();
 </script>
 </body></html>
