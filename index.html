@@ -84,8 +84,19 @@ function render(){renderLineButtons();$('activeLine').textContent=selectedLine||
 function renderTable(arr){const tb=$('tbody');tb.innerHTML='';$('empty').style.display=arr.length?'none':'block';arr.forEach(x=>{const c=calc(x),cls=c.status==='GOOD'?'good':c.status==='WARNING'?'warning':'low';const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(x.date)}</td><td>${fmt(x.minutes,0)} min</td><td>${fmt(x.std,2)}</td><td>${fmt(x.actualCt,2)}</td><td><strong>${fmt(c.eff,1)}%</strong></td><td>${fmt(c.target,0)}</td><td>${fmt(x.qty,0)}</td><td>${fmt(x.ng,0)}</td><td>${fmt(c.ach,1)}%</td><td><span class="badge ${cls}">${c.status}</span></td><td><div class="actions"><button class="small edit" onclick="editRow('${esc(x.id)}')">Edit</button><button class="small del" onclick="deleteRow('${esc(x.id)}')">Hapus</button></div></td>`;tb.appendChild(tr)})}
 function renderStats(arr){let t=0,q=0,e=0,ng=0;arr.forEach(x=>{const c=calc(x);t+=c.target;q+=+x.qty||0;e+=c.eff;ng+=+x.ng||0});$('avgEff').textContent=fmt(arr.length?e/arr.length:0,1)+'%';$('totalTarget').textContent=Math.round(t).toLocaleString('id-ID');$('totalQty').textContent=Math.round(q).toLocaleString('id-ID');$('achievement').textContent=fmt(t?q/t*100:0,1)+'%';$('totalNg').textContent=Math.round(ng).toLocaleString('id-ID')}
 const valueLabelPlugin={id:'valueLabelPlugin',afterDatasetsDraw(chart){const{ctx}=chart;ctx.save();chart.data.datasets.forEach((ds,di)=>{if((ds.label||'').toLowerCase().includes('efisiensi')){const meta=chart.getDatasetMeta(di);meta.data.forEach((bar,i)=>{const v=ds.data[i];if(v==null)return;ctx.fillStyle='#0f2340';ctx.font='700 11px Inter,Segoe UI,Arial';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(Number(v).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+'%',bar.x,bar.y-5)})}});ctx.restore()}};
+function destroyExistingChart(id){
+ const canvas=$(id);
+ if(!canvas || typeof Chart==='undefined') return;
+ try{
+   const old=Chart.getChart(canvas);
+   if(old && typeof old.destroy==='function') old.destroy();
+ }catch(e){ console.warn('Chart cleanup:',e); }
+}
 function drawCharts(arr){
- if(effChart){effChart.destroy();effChart=null} if(qtyChart){qtyChart.destroy();qtyChart=null} if(window.ngChart){window.ngChart.destroy();window.ngChart=null}
+ destroyExistingChart('effChart');
+ destroyExistingChart('qtyChart');
+ destroyExistingChart('ngChart');
+ effChart=null; qtyChart=null;
  const dates=[...new Set(arr.map(x=>x.date))].sort((a,b)=>new Date(a)-new Date(b));
  const labels=dates.map(d=>{const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d});
  const rowsFor=d=>arr.filter(x=>x.date===d);
@@ -101,6 +112,26 @@ async function save(){if(!selectedLine){alertMsg('Pilih atau tambah line terlebi
 function resetForm(){$('date').value=today();$('minutes').value='';$('std').value='';$('actualCt').value='';$('qty').value='';$('ng').value='';delete $('save').dataset.editId;$('save').textContent='Simpan Data'}
 function editRow(id){const x=record.lines.find(v=>v.id===id);if(!x)return;$('date').value=x.date;$('minutes').value=x.minutes;$('std').value=x.std;$('actualCt').value=x.actualCt;$('qty').value=x.qty;$('ng').value=x.ng||0;$('save').dataset.editId=id;$('save').textContent='Update Data';window.scrollTo({top:0,behavior:'smooth'})}
 async function deleteRow(id){if(!confirm('Hapus data productivity ini?'))return;const next=record.lines.filter(x=>x.id!==id);try{await api('PUT',{lines:next,lineMaster:record.lineMaster});record.lines=next;render();alertMsg('Data dihapus.',true)}catch(e){alertMsg('Gagal menghapus: '+e.message)}}
+const defaultTheme={navy:'#12345b',blue:'#2167e8',bg:'#f4f7fb',eff:'#2563eb',target:'#f59e0b',actual:'#16a34a',ach:'#7c3aed',ng:'#ef4444'};
+function applyTheme(t=defaultTheme){
+ const r=document.documentElement;
+ Object.entries(t).forEach(([k,v])=>{if(v)r.style.setProperty('--'+(k==='navy'?'navy':k==='blue'?'blue':k==='bg'?'bg':('c-'+k)),v)});
+ if($('cNavy')) $('cNavy').value=t.navy||defaultTheme.navy;
+ if($('cBlue')) $('cBlue').value=t.blue||defaultTheme.blue;
+ if($('cBg')) $('cBg').value=t.bg||defaultTheme.bg;
+ if($('cEff')) $('cEff').value=t.eff||defaultTheme.eff;
+ if($('cTarget')) $('cTarget').value=t.target||defaultTheme.target;
+ if($('cActual')) $('cActual').value=t.actual||defaultTheme.actual;
+ if($('cAch')) $('cAch').value=t.ach||defaultTheme.ach;
+ if($('cNg')) $('cNg').value=t.ng||defaultTheme.ng;
+ localStorage.setItem('productivityTheme',JSON.stringify(t));
+}
+function loadTheme(){try{const t={...defaultTheme,...JSON.parse(localStorage.getItem('productivityTheme')||'{}')};applyTheme(t)}catch(e){applyTheme(defaultTheme)}}
+function saveTheme(){applyTheme({navy:$('cNavy').value,blue:$('cBlue').value,bg:$('cBg').value,eff:$('cEff').value,target:$('cTarget').value,actual:$('cActual').value,ach:$('cAch').value,ng:$('cNg').value});drawCharts(current())}
+$('themeBtn').onclick=()=>$('themePanel').classList.toggle('show');
+['cNavy','cBlue','cBg','cEff','cTarget','cActual','cAch','cNg'].forEach(id=>$(id).addEventListener('input',saveTheme));
+$('resetTheme').onclick=()=>{applyTheme({...defaultTheme});drawCharts(current())};
+loadTheme();
 $('save').onclick=save;$('reset').onclick=resetForm;$('searchDate').onchange=render;
 $('cancelAdd').onclick=()=>$('modal').classList.remove('show');
 $('confirmAdd').onclick=async()=>{const n=$('newLine').value.trim();if(!n)return alertMsg('Isi nama line.');if(record.lineMaster.some(x=>x.toLowerCase()===n.toLowerCase()))return alertMsg('Line tersebut sudah ada.');record.lineMaster.push(n);selectedLine=n;$('modal').classList.remove('show');try{await api('PUT',{lines:record.lines,lineMaster:record.lineMaster});render();alertMsg('Line '+n+' berhasil ditambahkan.',true)}catch(e){record.lineMaster=record.lineMaster.filter(x=>x!==n);alertMsg('Gagal menambah line: '+e.message)}};
